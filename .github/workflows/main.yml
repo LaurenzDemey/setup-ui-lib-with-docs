@@ -29,14 +29,26 @@ jobs:
       - name: Build doc application
         run: npm run nx build docs -- --prod
 
-      # give more info
-      - name: list files
-        run: find . -type d | sed -e "s/[^-][^\/]*\//  |/g" -e "s/|\([^ ]\)/| - \1/"
+      # release to vNext
+      - name: Deploy docs as VNext
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist/apps/docs/browser
+          clean: true
+          target-folder: vNext
 
       # release to vNext
       - name: Deploy docs as VNext
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: dist\apps\docs\browser
+          folder: ./dist/apps/docs/browser
+          clean: true
+          target-folder: vNext
+
+      # release to vNext (2)
+      - name: Deploy docs as VNext
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: ../dist/apps/docs/browser
           clean: true
           target-folder: vNext
