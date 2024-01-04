@@ -1,3 +1,7 @@
+# This github action flow is used for protecting the main branch.
+# We check for conventional commits as we use squash commits and automatic changelog by convention commit messages.
+# We also run the code quality checks (like build/lint/test, but can be extended if needed)
+
 on:
   pull_request:
     branches: ['main']
@@ -28,4 +32,5 @@ jobs:
       - name: Install
         run: npm ci
 
-      - run: npx nx run-many -t lint,build,test
+      # Run lint, build & test in parallel
+      - run: npm run nx run-many -- -t lint,build,test
