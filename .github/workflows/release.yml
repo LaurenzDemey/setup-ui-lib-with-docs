@@ -59,23 +59,39 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      # replace <base href="/"> => <base href="setup-ui-lib-with-docs/">
+      - name: Find and Replace
+        uses: jacobtomlinson/gha-find-replace@v3
+        with:
+          find: '<base href="/">'
+          replace: '<base href="setup-ui-lib-with-docs/">'
+          include: 'dist/apps/docs/browser/index.html'
+
       # release as official doc
       - name: Deploy docs as VNext
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: dist\apps\docs\browser
+          folder: dist/apps/docs/browser
           clean: true
           clean-exclude: |
             vNext
             versions
 
+      # replace <base href="setup-ui-lib-with-docs/"> => <base href="setup-ui-lib-with-docs/x.x.x/">
+      - name: Find and Replace
+        uses: jacobtomlinson/gha-find-replace@v3
+        with:
+          find: '<base href="setup-ui-lib-with-docs/">'
+          replace: '<base href="setup-ui-lib-with-docs/$GITHUB_REF_NAME/">'
+          include: 'dist/apps/docs/browser/index.html'
+
       # release as specific version
       - name: Deploy docs as VNext
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: dist\apps\docs\browser
+          folder: dist/apps/docs/browser
           clean: true
-          target-folder: versions\$GITHUB_REF_NAME
+          target-folder: versions/$GITHUB_REF_NAME
 
   packages:
     needs: build
