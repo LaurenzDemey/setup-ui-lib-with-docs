@@ -2,36 +2,37 @@
 # In this flow we update the docs, but we could also release an alpha version of the packages (if needed - depends on cleanup on nexus registry)
 
 on:
+  push:
     branches: ['main']
-    workflow_dispatch:
-  
-  jobs:
-    main:
-      runs-on: ubuntu-latest
-      steps:
-        # Get the code
-        - name: Checkout
-          uses: actions/checkout@v4
-  
-        # Setup node
-        - name: Setup node
-          uses: actions/setup-node@v3
-          with:
-            node-version: 20.10.x
-            cache: npm
-  
-        # Install npm packages
-        - name: Install
-          run: npm ci
-  
-        # build documentation for vNext
-        - name: Build doc application
-          run: npm run nx build docs -- --prod
-  
-        # release to vNext
-        - name: Deploy docs as VNext
-          uses: JamesIves/github-pages-deploy-action@v4
-          with:
-            folder: dist\apps\docs\browser
-            clean: true
-            target-folder: vNext
+  workflow_dispatch:
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      # Get the code
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Setup node
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.10.x
+          cache: npm
+
+      # Install npm packages
+      - name: Install
+        run: npm ci
+
+      # build documentation for vNext
+      - name: Build doc application
+        run: npm run nx build docs -- --prod
+
+      # release to vNext
+      - name: Deploy docs as VNext
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist\apps\docs\browser
+          clean: true
+          target-folder: vNext

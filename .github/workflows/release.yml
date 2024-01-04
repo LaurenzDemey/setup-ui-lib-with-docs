@@ -1,67 +1,92 @@
 # This github action flow is used for releasing a new official version.
 # In this flow we release the version of the packages and the docs (docs as version & default)
 
-on:    
-    push:
-        branches: ['main']
-        tags:
-          - 'v*.*.*'
+on:
+  push:
+    tags:
+      - 'v*.*.*'
 
-  jobs:
-    build:
-      runs-on: ubuntu-latest
-      steps:
-        # Get the code
-        - name: Checkout
-          uses: actions/checkout@v4
-  
-        # Setup node
-        - name: Setup node
-          uses: actions/setup-node@v3
-          with:
-            node-version: 20.10.x
-            cache: npm
-  
-        # Install npm packages
-        - name: Install
-          run: npm ci
-  
-        # build all buildable parts
-        - name: Build doc application
-          run: npm run nx run-many -- -t build
-    
-    docs:
-      needs: build
-      runs-on: ubuntu-latest
-      steps:
-        # release as official doc
-        - name: Deploy docs as VNext
-          uses: JamesIves/github-pages-deploy-action@v4
-          with:
-            folder: dist\apps\docs\browser
-            clean: true
-            clean-exclude: |
-               vNext
-               versions
-        
-        # release as specific version
-        - name: Deploy docs as VNext
-          uses: JamesIves/github-pages-deploy-action@v4
-          with:
-            folder: dist\apps\docs\browser
-            clean: true
-            target-folder: versions\$GITHUB_REF_NAME
+jobs:
+  # @see https://stackoverflow.com/a/72959712/8179249
+  check-current-branch:
+    runs-on: ubuntu-latest
+    outputs:
+      branch: ${{ steps.check_step.outputs.branch }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    packages:
-      needs: build
-      runs-on: ubuntu-latest
-      steps:
-        # Mark versions + mark release to github
-        # TODO: remove dry-run
-        - name: configure version number + add github release
-          run: npm run nx release version $GITHUB_REF_NAME -- --dry-run
+      - name: Get current branch
+        id: check_step
+        # 1. Get the list of branches ref where this tag exists
+        # 2. Remove 'origin/' from that result
+        # 3. Put that string in output
+        # => We can now use function 'contains(list, item)''
+        run: |
+          raw=$(git branch -r --contains ${{ github.ref }})
+          branch="$(echo ${raw//origin\//} | tr -d '\n')"
+          echo "{name}=branch" >> $GITHUB_OUTPUT
+          echo "Branches where this tag exists : $branch."
 
-        # Deploy packages
-        # TODO: remove dry-run
-        - name: deploy packages
-          run: npm run release publish $GITHUB_REF_NAME -- --dry-run
+  build:
+    needs: check-current-branch
+    # only run if tag is present on branch 'main'
+    if: contains(${{ needs.check.outputs.branch }}, 'main')`
+    runs-on: ubuntu-latest
+    steps:
+      # Get the code
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Setup node
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.10.x
+          cache: npm
+
+      # Install npm packages
+      - name: Install
+        run: npm ci
+
+      # build all buildable parts
+      - name: Build doc application
+        run: npm run nx run-many -- -t build
+
+  docs:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # release as official doc
+      - name: Deploy docs as VNext
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist\apps\docs\browser
+          clean: true
+          clean-exclude: |
+            vNext
+            versions
+
+      # release as specific version
+      - name: Deploy docs as VNext
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist\apps\docs\browser
+          clean: true
+          target-folder: versions\$GITHUB_REF_NAME
+
+  packages:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # Mark versions + mark release to github
+      # TODO: remove dry-run
+      - name: configure version number + add github release
+        run: npm run nx release version $GITHUB_REF_NAME -- --dry-run
+
+      # Deploy packages
+      # TODO: remove dry-run
+      - name: deploy packages
+        run: npm run release publish $GITHUB_REF_NAME -- --dry-run
