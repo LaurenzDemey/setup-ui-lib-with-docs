@@ -1,0 +1,31 @@
+on:
+  pull_request:
+    branches: ['main']
+  workflow_dispatch:
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      # validate PR title
+      - name: PR Conventional Commit Validation
+        uses: ytanikin/PRConventionalCommits@1.1.0
+        with:
+          task_types: '["feat","fix","docs","test","ci","refactor","perf","chore","revert"]'
+
+      # Get the code
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Setup node
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.10.x
+          cache: npm
+
+      # Install npm packages
+      - name: Install
+        run: npm ci
+
+      - run: npx nx run-many -t lint,build,test
