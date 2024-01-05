@@ -64,7 +64,7 @@ jobs:
         uses: jacobtomlinson/gha-find-replace@v3
         with:
           find: '<base href="/">'
-          replace: '<base href="setup-ui-lib-with-docs/">'
+          replace: '<base href="/setup-ui-lib-with-docs/">'
           include: 'dist/apps/docs/browser/index.html'
 
       # release as official doc
@@ -81,8 +81,8 @@ jobs:
       - name: Find and Replace
         uses: jacobtomlinson/gha-find-replace@v3
         with:
-          find: '<base href="setup-ui-lib-with-docs/">'
-          replace: '<base href="setup-ui-lib-with-docs/$GITHUB_REF_NAME/">'
+          find: '<base href="/setup-ui-lib-with-docs/">'
+          replace: '<base href="/setup-ui-lib-with-docs/$GITHUB_REF_NAME/">'
           include: 'dist/apps/docs/browser/index.html'
 
       # release as specific version
