@@ -27,7 +27,16 @@ jobs:
 
       # build documentation for vNext
       - name: Build doc application
-        run: npm run nx build docs -- --prod --base-href=setup-ui-lib-with-docs/vNext
+        run: npm run nx build docs -- --prod
+
+      # replace <base href="/"> => <base href="/setup-ui-lib-with-docs/vNext/">
+      # This is faster, so that the build command can be cached. If we specify another base href each time, then it will rerun the whole build
+      - name: Find and Replace
+        uses: jacobtomlinson/gha-find-replace@v3
+        with:
+          find: '<base href="/">'
+          replace: '<base href="/setup-ui-lib-with-docs/vNext/">'
+          include: 'dist/apps/docs/browser/index.html'
 
       # release to vNext
       - name: Deploy docs as VNext
