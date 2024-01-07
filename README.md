@@ -8,21 +8,11 @@ This mono repo contains 1 application (our documentation website) and multiple p
 
 ### perform a release
 
-**Step 1: generate changelog**
+**generate changelog & tag**
 On a new feature branch, execute the command:
 
 ```cmd
-npx nx release changelog [specific version] --git-remote --git-tag=true
+npx nx release changelog [specific version] --git-remote=true --git-tag=true
 ```
 
 > Tip: if you don't know the version, you can always add `--dry-run`, to check what is inside.
-
-**Step 2: Check if all libraries are synced**
-run the command:
-
-```cmd
-npm run nx run-many -- -t lint
-```
-
-**Step 3: check if everything is ok for documentation**
-optional step
