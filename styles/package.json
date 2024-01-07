@@ -1,0 +1,10 @@
+{
+  "name": "@dummy/styles",
+  "version": "0.0.1",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "sass": "./src/index.scss"
+    }
+  }
+}
