@@ -1,1 +1,7 @@
-<org-nx-welcome></org-nx-welcome> <router-outlet></router-outlet>
+<h1>Docs</h1>
+<h2>The following versions are found</h2>
+<ul>
+  <li *ngFor="let version of versions$ | async">
+    {{ version }}
+  </li>
+</ul>
