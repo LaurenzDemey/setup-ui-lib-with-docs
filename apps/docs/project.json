@@ -4,6 +4,7 @@
   "projectType": "application",
   "prefix": "org",
   "sourceRoot": "apps/docs/src",
+  "implicitDependencies": ["styles"],
   "tags": [],
   "targets": {
     "build": {

@@ -1,0 +1,26 @@
+{
+  "name": "styles",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "styles/src",
+  "prefix": "org",
+  "tags": [],
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/angular:package",
+      "outputs": ["{workspaceRoot}/dist/{projectRoot}"],
+      "options": {
+        "project": "styles/ng-package.json"
+      },
+      "configurations": {
+        "production": {
+          "tsConfig": "styles/tsconfig.lib.prod.json"
+        },
+        "development": {
+          "tsConfig": "styles/tsconfig.lib.json"
+        }
+      },
+      "defaultConfiguration": "production"
+    }
+  }
+}
