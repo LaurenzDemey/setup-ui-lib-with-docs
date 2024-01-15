@@ -30,7 +30,8 @@ jobs:
           echo "{name}=branch" >> $GITHUB_OUTPUT
           echo "Branches where this tag exists : $branch."
 
-  build:
+  build_and_deploy:
+    concurrency: ci-${{ github.ref }} # Recommended if you intend to make multiple deployments in quick succession.
     needs: check-current-branch
     # only run if tag is present on branch 'main'
     if: contains(${{ needs.check.outputs.branch }}, 'main')`
@@ -55,18 +56,14 @@ jobs:
       - name: Build doc application
         run: npm run nx run-many -- -t build
 
-  docs:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      # replace <base href="/"> => <base href="setup-ui-lib-with-docs/">
+      # release official docs with replacements
+      # replace <base href="/"> => <base href="/setup-ui-lib-with-docs/">
       - name: Find and Replace
         uses: jacobtomlinson/gha-find-replace@v3
         with:
           find: '<base href="/">'
           replace: '<base href="/setup-ui-lib-with-docs/">'
           include: 'dist/apps/docs/browser/index.html'
-
       # release as official doc
       - name: Deploy docs as VNext
         uses: JamesIves/github-pages-deploy-action@v4
@@ -77,6 +74,7 @@ jobs:
             vNext
             versions
 
+      # Release as specific version with replacements (keep in mind replacements are different)
       # replace <base href="setup-ui-lib-with-docs/"> => <base href="setup-ui-lib-with-docs/x.x.x/">
       - name: Find and Replace
         uses: jacobtomlinson/gha-find-replace@v3
@@ -84,7 +82,6 @@ jobs:
           find: '<base href="/setup-ui-lib-with-docs/">'
           replace: '<base href="/setup-ui-lib-with-docs/$GITHUB_REF_NAME/">'
           include: 'dist/apps/docs/browser/index.html'
-
       # release as specific version
       - name: Deploy docs as VNext
         uses: JamesIves/github-pages-deploy-action@v4
@@ -93,12 +90,9 @@ jobs:
           clean: true
           target-folder: versions/$GITHUB_REF_NAME
 
-  packages:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
       # Mark versions + mark release to github
       # TODO: remove dry-run
+      # TODO: maybe we need to manually do this, as this will change the package.json files (so new commits will happen)
       - name: configure version number + add github release
         run: npm run nx release version $GITHUB_REF_NAME -- --dry-run
 
