@@ -12,6 +12,8 @@ jobs:
       # Get the code
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 #needed for retrieving all tags
 
       # Setup node
       - name: Setup node
