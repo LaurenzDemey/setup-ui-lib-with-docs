@@ -12,6 +12,7 @@ const { releaseVersion } = require('nx/release');
       verbose: false,
       dryRun: true,
     });
+    console.log('next version is: ', workspaceVersion);
     console.log(`::set-output name=next-version::${workspaceVersion}`);
   } catch (error) {
     console.error('Error occurred:', error.message);
