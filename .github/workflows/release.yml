@@ -39,16 +39,14 @@ jobs:
       - name: remove temporarily folder
         run: npx rimraf dist/latest-and-specific-version
 
-      # Copy files to right structure (deploy same app twice (latest + specific version) in 1 go)
-      - name: Copy dist folder as latest and specific folder
+      # Copy files to right structure as latest
+      - name: Copy dist folder as latest
         run: |
           mkdir dist/latest-and-specific-version
           if [ "${{ runner.os }}" = "Windows" ]; then            
             xcopy /E /I dist/apps/docs/browser dist/latest-and-specific-version
-            xcopy /E /I dist/apps/docs/browser dist/latest-and-specific-version/${{steps.next-v.outputs.next-version}}
           else
             cp -r dist/apps/docs/browser/* dist/latest-and-specific-version
-            cp -r dist/apps/docs/browser/* dist/latest-and-specific-version/${{steps.next-v.outputs.next-version}}
           fi
 
       # replace <base href="/"> => <base href="/setup-ui-lib-with-docs/">
@@ -59,9 +57,20 @@ jobs:
           replace: '<base href="/setup-ui-lib-with-docs/">'
           include: 'dist/latest-and-specific-version/index.html'
 
+      # Copy files to right structure as specific version
+      - name: Copy dist folder as specific folder
+        if: ("${{steps.next-v.outputs.next-version}}" != "null")
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+              xcopy /E /I dist/apps/docs/browser dist/latest-and-specific-version/${{steps.next-v.outputs.next-version}}
+          else
+            cp -r dist/apps/docs/browser/* dist/latest-and-specific-version/${{steps.next-v.outputs.next-version}}
+          fi
+
       # replace <base href="/"> => <base href="/setup-ui-lib-with-docs/{version}">
       - name: Replace base href for specific version
         uses: jacobtomlinson/gha-find-replace@v3
+        if: ("${{steps.next-v.outputs.next-version}}" != "null")
         with:
           find: '<base href="/">'
           replace: '<base href="/setup-ui-lib-with-docs/${{steps.next-v.outputs.next-version}}">'
@@ -79,4 +88,5 @@ jobs:
 
       # Mark versions + mark release to github (still dry-run)
       - name: configure version number + add github release + add changelog + deploy packages
+        if: ("${{steps.next-v.outputs.next-version}}" != "null")
         run: node tools/release.js
