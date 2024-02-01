@@ -42,7 +42,8 @@ jobs:
       # Copy files to right structure (deploy same app twice (latest + specific version) in 1 go)
       - name: Copy dist folder as latest and specific folder
         run: |
-          if [ "${{ runner.os }}" = "Windows" ]; then
+          mkdir dist/latest-and-specific-version
+          if [ "${{ runner.os }}" = "Windows" ]; then            
             xcopy /E /I dist/apps/docs/browser dist/latest-and-specific-version
             xcopy /E /I dist/apps/docs/browser dist/latest-and-specific-version/${{steps.next-v.outputs.next-version}}
           else
