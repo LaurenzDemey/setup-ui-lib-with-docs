@@ -2,39 +2,11 @@
 # In this flow we release the version of the packages and the docs (docs as version & default)
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+  workflow_dispatch:
 
 jobs:
-  # @see https://stackoverflow.com/a/72959712/8179249
-  check-current-branch:
-    runs-on: ubuntu-latest
-    outputs:
-      branch: ${{ steps.check_step.outputs.branch }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Get current branch
-        id: check_step
-        # 1. Get the list of branches ref where this tag exists
-        # 2. Remove 'origin/' from that result
-        # 3. Put that string in output
-        # => We can now use function 'contains(list, item)''
-        run: |
-          raw=$(git branch -r --contains ${{ github.ref }})
-          branch="$(echo ${raw//origin\//} | tr -d '\n')"
-          echo "{name}=branch" >> $GITHUB_OUTPUT
-          echo "Branches where this tag exists : $branch."
-
   build_and_deploy:
     concurrency: ci-${{ github.ref }} # Recommended if you intend to make multiple deployments in quick succession.
-    needs: check-current-branch
-    # only run if tag is present on branch 'main'
-    if: contains(${{ needs.check.outputs.branch }}, 'main')`
     runs-on: ubuntu-latest
     steps:
       # Get the code
@@ -56,47 +28,52 @@ jobs:
       - name: Build doc application
         run: npm run nx run-many -- -t build
 
-      # release official docs with replacements
+      # get next-version
+      - name: get the new version and add to output
+        id: next-v
+        run: node tools/next-version.js
+
+      # remove temporarily folder
+      - name: remove temporarily folder
+        run: npx rimraf dist/latest-and-specific-version
+
+      # Copy files to right structure (deploy same app twice (latest + specific version) in 1 go)
+      - name: Copy dist folder as latest and specific folder
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            xcopy /E /I dist/apps/docs/browser dist/latest-and-specific-version
+            xcopy /E /I dist/apps/docs/browser dist/latest-and-specific-version/${{steps.next-v.outputs.next-version}}
+          else
+            cp -r dist/apps/docs/browser/* dist/latest-and-specific-version
+            cp -r dist/apps/docs/browser/* dist/latest-and-specific-version/${{steps.next-v.outputs.next-version}}
+          fi
+
       # replace <base href="/"> => <base href="/setup-ui-lib-with-docs/">
-      - name: Find and Replace
+      - name: Replace base href for latest
         uses: jacobtomlinson/gha-find-replace@v3
         with:
           find: '<base href="/">'
           replace: '<base href="/setup-ui-lib-with-docs/">'
-          include: 'dist/apps/docs/browser/index.html'
+          include: 'dist/latest-and-specific-version/index.html'
+
+      # replace <base href="/"> => <base href="/setup-ui-lib-with-docs/{version}">
+      - name: Replace base href for specific version
+        uses: jacobtomlinson/gha-find-replace@v3
+        with:
+          find: '<base href="/">'
+          replace: '<base href="/setup-ui-lib-with-docs/${{steps.next-v.outputs.next-version}}">'
+          include: 'dist/latest-and-specific-version/${{steps.next-v.outputs.next-version}}/index.html'
+
       # release as official doc
-      - name: Deploy docs as VNext
+      - name: Deploy docs as latest/official version
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: dist/apps/docs/browser
+          folder: dist/latest-and-specific-version
           clean: true
           clean-exclude: |
             vNext
             versions
 
-      # Release as specific version with replacements (keep in mind replacements are different)
-      # replace <base href="setup-ui-lib-with-docs/"> => <base href="setup-ui-lib-with-docs/x.x.x/">
-      - name: Find and Replace
-        uses: jacobtomlinson/gha-find-replace@v3
-        with:
-          find: '<base href="/setup-ui-lib-with-docs/">'
-          replace: '<base href="/setup-ui-lib-with-docs/$GITHUB_REF_NAME/">'
-          include: 'dist/apps/docs/browser/index.html'
-      # release as specific version
-      - name: Deploy docs as VNext
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: dist/apps/docs/browser
-          clean: true
-          target-folder: versions/$GITHUB_REF_NAME
-
-      # Mark versions + mark release to github
-      # TODO: remove dry-run
-      # TODO: maybe we need to manually do this, as this will change the package.json files (so new commits will happen)
-      - name: configure version number + add github release
-        run: npm run nx release version $GITHUB_REF_NAME -- --dry-run
-
-      # Deploy packages
-      # TODO: remove dry-run
-      - name: deploy packages
-        run: npm run release publish $GITHUB_REF_NAME -- --dry-run
+      # Mark versions + mark release to github (still dry-run)
+      - name: configure version number + add github release + add changelog + deploy packages
+        run: node tools/release.js

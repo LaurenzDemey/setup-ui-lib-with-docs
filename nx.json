@@ -3,20 +3,29 @@
   "affected": {
     "defaultBase": "master"
   },
+  "release": {
+    "projectsRelationship": "fixed",
+    "changelog": {
+      "git": {
+        "commit": true,
+        "tag": true
+      },
+      "workspaceChangelog": {
+        "createRelease": "github"
+      }
+    },
+    "version": {
+      "generatorOptions": {
+        "currentVersionResolver": "git-tag",
+        "specifierSource": "conventional-commits"
+      }
+    }
+  },
   "targetDefaults": {
     "build": {
       "cache": true,
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"]
-    },
-    "lint": {
-      "cache": true,
-      "inputs": [
-        "default",
-        "{workspaceRoot}/.eslintrc.json",
-        "{workspaceRoot}/.eslintignore",
-        "{workspaceRoot}/eslint.config.js"
-      ]
     },
     "@nx/jest:jest": {
       "cache": true,
@@ -30,6 +39,15 @@
           "codeCoverage": true
         }
       }
+    },
+    "@nx/eslint:lint": {
+      "cache": true,
+      "inputs": [
+        "default",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/.eslintignore",
+        "{workspaceRoot}/eslint.config.js"
+      ]
     }
   },
   "namedInputs": {
@@ -60,6 +78,5 @@
     "@nx/angular:component": {
       "style": "scss"
     }
-  },
-  "nxCloudAccessToken": "NGI5MWEyNWUtYzU2Yy00MzI0LTg3MTUtYjJhZjA2YmY2MjA3fHJlYWQtd3JpdGU="
+  }
 }
