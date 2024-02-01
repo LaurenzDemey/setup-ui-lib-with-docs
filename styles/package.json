@@ -2,6 +2,10 @@
   "name": "@dummy/styles",
   "version": "0.0.1",
   "sideEffects": false,
+  "files": [
+    "src/**/*.scss",
+    "**/*.md"
+  ],
   "exports": {
     ".": {
       "sass": "./src/index.scss"
