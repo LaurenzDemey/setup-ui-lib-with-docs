@@ -24,13 +24,16 @@ jobs:
       - name: Use LATEST_TAG
         run: echo $LATEST_TAG
 
+      - name: latest tag without V
+        run: echo "LATEST_TAG_WITHOUT_V=${LATEST_TAG#v}" >> $GITHUB_ENV
+
       # Get how many commits are after the latest tag
       - name: Get number of commits after last tag
         id: commits-after-tag
         run: echo "COMMITS_AFTER_TAG=$(git rev-list ${{env.LATEST_TAG}}..HEAD --count)" >> $GITHUB_ENV
 
       - name: Print output
-        run: echo "version ${{env.LATEST_TAG}}-alpha-${{env.COMMITS_AFTER_TAG}}"
+        run: echo "version ${{env.LATEST_TAG_WITHOUT_V}}-alpha-${{env.COMMITS_AFTER_TAG}}"
 
       # TODO: extract the v from the latest tag
 
