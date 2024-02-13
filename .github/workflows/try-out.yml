@@ -20,10 +20,14 @@ jobs:
         id: get-latest-tag
         run: echo "LATEST_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
 
+      # Use the value of LATEST_TAG
+      - name: Use LATEST_TAG
+        run: echo $LATEST_TAG
+
       # Get how many commits are after the latest tag
       - name: Get number of commits after last tag
         id: commits-after-tag
-        run: echo "::set-output name=commits-after-tag::$(git rev-list $LATEST_TAG..HEAD --count)
+        run: echo "::set-output name=commits-after-tag::$(git rev-list ${LATEST_TAG}..HEAD --count)
 
       - name: Print output
         run: echo "version ${{steps.get-latest-tag.outputs.latest-tag}}-alpha-${{steps.commits-after-tag.outputs.commits-after-tag}}"
